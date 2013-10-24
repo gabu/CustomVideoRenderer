@@ -6,11 +6,14 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.app.Activity;
+import android.content.res.AssetFileDescriptor;
 import android.content.res.Configuration;
 import android.hardware.Camera.CameraInfo;
+import android.media.MediaPlayer;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.os.Bundle;
+import android.os.StrictMode.VmPolicy;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
@@ -50,6 +53,8 @@ public final class MainActivity extends Activity implements Renderer
 	 */
 	private CameraImageRenderer mCameraImageRenderer;
 
+	private VideoRenderer mVideoRenderer;
+
 	/**
 	 * Simple cube that is rendered on top of the target pattern
 	 */
@@ -79,6 +84,8 @@ public final class MainActivity extends Activity implements Renderer
 	 * Main GLSufaceView in which everything is rendered
 	 */
 	private GLSurfaceView mSurfaceView;
+	
+	private MediaPlayer mMediaPlayer;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -129,7 +136,6 @@ public final class MainActivity extends Activity implements Renderer
 		{
 			e.printStackTrace();
 		}
-
 	}
 	
 	@Override
@@ -190,6 +196,20 @@ public final class MainActivity extends Activity implements Renderer
 			mSurfaceView.setRenderer(this);
 			mSurfaceView.setKeepScreenOn(true);
 		}
+		
+		mMediaPlayer = new MediaPlayer();
+		try {
+			AssetFileDescriptor afd = getAssets().openFd("h264.mp4");
+			mMediaPlayer.setDataSource(afd.getFileDescriptor(),
+					afd.getStartOffset(), afd.getLength());
+			afd.close();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (IllegalStateException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}	
 	}
 
 	@Override
@@ -219,6 +239,13 @@ public final class MainActivity extends Activity implements Renderer
 			ViewGroup v = (ViewGroup) findViewById(android.R.id.content);
 			v.removeAllViews();
 			mSurfaceView = null;
+		}
+		
+		if (mMediaPlayer != null) {
+			if (mMediaPlayer.isPlaying()) {
+				mMediaPlayer.stop();
+			}
+			mMediaPlayer.release();
 		}
 	}
 
@@ -307,11 +334,15 @@ public final class MainActivity extends Activity implements Renderer
 			projMatrix[5] *= mCameraImageRenderer.getScaleY();
 			gl.glLoadMatrixf(projMatrix, 0);
 
-			mCube.render(gl);
+//			mCube.render(gl);
+			
+			mVideoRenderer.draw(gl, mScreenRotation);
+		} else {
+			if (mMediaPlayer.isPlaying()) {
+				mMediaPlayer.pause();
+			}
 		}
 	}
-
-
 
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height)
@@ -339,6 +370,9 @@ public final class MainActivity extends Activity implements Renderer
 		
 		// Create camera image renderer
 		mCameraImageRenderer = new CameraImageRenderer(this, gl);
+
+		// Create video renderer
+		mVideoRenderer = new VideoRenderer(this, gl, mMediaPlayer);
 
 		gl.glShadeModel(GL10.GL_SMOOTH);
 		gl.glClearColor(0, 0, 0, 0);
