@@ -10,10 +10,10 @@ import android.content.res.AssetFileDescriptor;
 import android.content.res.Configuration;
 import android.hardware.Camera.CameraInfo;
 import android.media.MediaPlayer;
+import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.os.Bundle;
-import android.os.StrictMode.VmPolicy;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
@@ -192,7 +192,7 @@ public final class MainActivity extends Activity implements Renderer
 
 			// Create a new GLSurfaceView
 			mSurfaceView = new GLSurfaceView(this);
-			mSurfaceView.setEGLContextClientVersion(1);
+			mSurfaceView.setEGLContextClientVersion(2);
 			mSurfaceView.setRenderer(this);
 			mSurfaceView.setKeepScreenOn(true);
 		}
@@ -278,13 +278,14 @@ public final class MainActivity extends Activity implements Renderer
 		// the NULL renderer. This call is necessary to get the camera image and update tracking.
 		mMetaioSDK.render();
 
-		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
+        GLES20.glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+        GLES20.glClear( GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
 
-		gl.glDisable(GL10.GL_DEPTH_TEST);
+		GLES20.glDisable(GLES20.GL_DEPTH_TEST);
 
 		mCameraImageRenderer.draw(gl, mScreenRotation);
 
-		gl.glEnable(GL10.GL_DEPTH_TEST);
+		GLES20.glEnable(GLES20.GL_DEPTH_TEST);
 
 		//
 		// Render cube in front of camera image (if we're currently tracking)
@@ -305,21 +306,21 @@ public final class MainActivity extends Activity implements Renderer
 			// for instance if you have your own camera implementation. Additionally, the cube is
 			// scaled up by factor 40 and translated by 40 units in order to have its back face lie
 			// on the tracked image.
-			gl.glMatrixMode(GL10.GL_MODELVIEW);
-			gl.glLoadIdentity();
+//			gl.glMatrixMode(GL10.GL_MODELVIEW);
+//			gl.glLoadIdentity();
 
 			// Use typical view matrix (camera looking along negative Z axis, see previous hint)
-			gl.glLoadIdentity();
+//			gl.glLoadIdentity();
 
 			// The order is important here: We first want to scale the cube, then put it 40 units
 			// higher (because it's rendered from -1 to +1 on all axes, after scaling that's +-40)
 			// so that its back face lies on the tracked image and move it into place
 			// (transformation to the coordinate system of the tracked image).
-			gl.glMultMatrixf(modelMatrix, 0); // MODEL_VIEW = LOOK_AT * MODEL
-			gl.glTranslatef(0, 0, 40);
-			gl.glScalef(40, 40, 40); // all sides of the cube then have dimension 80
+//			gl.glMultMatrixf(modelMatrix, 0); // MODEL_VIEW = LOOK_AT * MODEL
+//			gl.glTranslatef(0, 0, 40);
+//			gl.glScalef(40, 40, 40); // all sides of the cube then have dimension 80
 
-			gl.glMatrixMode(GL10.GL_PROJECTION);
+//			gl.glMatrixMode(GL10.GL_PROJECTION);
 			float[] projMatrix = new float[16];
 
 			// Use right-handed projection matrix
@@ -332,11 +333,11 @@ public final class MainActivity extends Activity implements Renderer
 			// camera image is wider than the screen and thus its width is displayed cropped).
 			projMatrix[0] *= mCameraImageRenderer.getScaleX();
 			projMatrix[5] *= mCameraImageRenderer.getScaleY();
-			gl.glLoadMatrixf(projMatrix, 0);
+//			gl.glLoadMatrixf(projMatrix, 0);
 
 //			mCube.render(gl);
 			
-			mVideoRenderer.draw(gl, mScreenRotation);
+			mVideoRenderer.draw(gl, mScreenRotation, modelMatrix, projMatrix);
 		} else {
 			if (mMediaPlayer.isPlaying()) {
 				mMediaPlayer.pause();
@@ -372,16 +373,7 @@ public final class MainActivity extends Activity implements Renderer
 		mCameraImageRenderer = new CameraImageRenderer(this, gl);
 
 		// Create video renderer
-		mVideoRenderer = new VideoRenderer(this, gl, mMediaPlayer);
-
-		gl.glShadeModel(GL10.GL_SMOOTH);
-		gl.glClearColor(0, 0, 0, 0);
-
-		gl.glClearDepthf(1.0f);
-		gl.glDepthFunc(GL10.GL_LEQUAL);
-		gl.glDisable(GL10.GL_LIGHTING);
-
-		gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_NICEST);
+		mVideoRenderer = new VideoRenderer(this, mMediaPlayer);
 	}
 	
 }
