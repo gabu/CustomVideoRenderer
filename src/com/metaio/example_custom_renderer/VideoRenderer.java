@@ -169,9 +169,6 @@ public class VideoRenderer implements OnFrameAvailableListener {
             }
         }
 
-        GLES20.glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
-        GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
-
         GLES20.glUseProgram(mProgram);
         checkGlError("glUseProgram");
 
@@ -192,10 +189,9 @@ public class VideoRenderer implements OnFrameAvailableListener {
         GLES20.glEnableVertexAttribArray(maTextureHandle);
         checkGlError("glEnableVertexAttribArray maTextureHandle");
 
-        Matrix.setIdentityM(modelMatrix, 0);
+        Matrix.scaleM(modelMatrix, 0, 150, 150, 150);
         GLES20.glUniformMatrix4fv(muModelMatrixHandle, 1, false, modelMatrix, 0);
 
-        Matrix.setIdentityM(projectionMatrix, 0);
         GLES20.glUniformMatrix4fv(muProjectionMatrixHandle, 1, false, projectionMatrix, 0);
 
         GLES20.glUniformMatrix4fv(muSTMatrixHandle, 1, false, mSTMatrix, 0);

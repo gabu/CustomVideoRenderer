@@ -278,7 +278,7 @@ public final class MainActivity extends Activity implements Renderer
 		// the NULL renderer. This call is necessary to get the camera image and update tracking.
 		mMetaioSDK.render();
 
-        GLES20.glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         GLES20.glClear( GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
 
 		GLES20.glDisable(GLES20.GL_DEPTH_TEST);
@@ -365,7 +365,7 @@ public final class MainActivity extends Activity implements Renderer
 			mScreenRotation = Screen.getRotation(this);
 
 			// Set up custom rendering (metaio SDK will only do tracking and not render any objects itself)
-			mMetaioSDK.initializeRenderer(0, 0, mScreenRotation, ERENDER_SYSTEM.ERENDER_SYSTEM_NULL);
+			mMetaioSDK.initializeRenderer(0, 0, mScreenRotation, ERENDER_SYSTEM.ERENDER_SYSTEM_OPENGL_ES_2_0);
 			mRendererInitialized = true;
 		}
 		
